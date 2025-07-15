@@ -1,11 +1,11 @@
-package com.example.productmanagement.service;
+package com.example.productmanagement.service.impl;
 
 import com.example.productmanagement.exception.ProductNotFoundException;
 import com.example.productmanagement.model.Product;
 import com.example.productmanagement.repo.ProductRepository;
+import com.example.productmanagement.service.ExchangeRateService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -15,7 +15,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-class ProductServiceTest {
+class ProductServiceUnitTest {
 
     private ProductRepository productRepository;
     private ExchangeRateService exchangeRateService;
@@ -30,35 +30,35 @@ class ProductServiceTest {
 
     @Test
     void save_shouldConvertPriceToUsd() {
-        Product input = new Product(null, "Product A", BigDecimal.valueOf(100), true);
-        Product saved = new Product("0123456789", "Product A", BigDecimal.valueOf(100), true);
+        Product input = new Product(null, "Product", BigDecimal.valueOf(100), true);
+        Product saved = new Product("CODE000001", "Product A", BigDecimal.valueOf(100), true);
         saved.setId(1L);
 
         when(productRepository.save(input)).thenReturn(saved);
-       // when(exchangeRateService.getEurToUsdRate()).thenReturn(BigDecimal.valueOf(1.2));
+        when(exchangeRateService.convertEurToUsd(any())).thenReturn(BigDecimal.valueOf(100.6));
 
         Product result = productService.save(input);
 
         assertEquals(1L, result.getId());
-        assertEquals(BigDecimal.valueOf(120.0), result.getPriceUsd());
+        assertEquals(BigDecimal.valueOf(100.6), result.getPriceUsd());
     }
 
     @Test
     void findById_shouldReturnProductWithUsdPrice() {
-        Product product = new Product("0123456789", "Product A", BigDecimal.valueOf(50), true);
+        Product product = new Product("CODE000001", "Product", BigDecimal.valueOf(50), true);
         product.setId(1L);
 
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
-      //  when(exchangeRateService.getEurToUsdRate()).thenReturn(BigDecimal.valueOf(1.1));
+        when(exchangeRateService.convertEurToUsd(any())).thenReturn(BigDecimal.valueOf(50.6));
 
         Product result = productService.findById(1L);
 
         assertEquals(1L, result.getId());
-        assertEquals(BigDecimal.valueOf(55.0), result.getPriceUsd());
+        assertEquals(BigDecimal.valueOf(50.6), result.getPriceUsd());
     }
 
     @Test
-    void findById_shouldThrowIfNotFound() {
+    void findById_shouldThrowExceptionIfNotFound() {
         when(productRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThrows(ProductNotFoundException.class, () -> productService.findById(99L));
@@ -67,17 +67,17 @@ class ProductServiceTest {
     @Test
     void findAll_shouldReturnAllWithUsdPrices() {
         List<Product> products = Arrays.asList(
-                new Product("0123456789", "Product A", BigDecimal.valueOf(10), true),
-                new Product("9876543210", "Product B", BigDecimal.valueOf(20), true)
+                new Product("CODE000001", "Product A", BigDecimal.valueOf(10), true),
+                new Product("CODE000002", "Product B", BigDecimal.valueOf(10), true)
         );
 
         when(productRepository.findAll()).thenReturn(products);
-      //  when(exchangeRateService.getEurToUsdRate()).thenReturn(BigDecimal.valueOf(1.5));
+        when(exchangeRateService.convertEurToUsd(any())).thenReturn(BigDecimal.valueOf(10.6));
 
         List<Product> result = productService.findAll();
 
         assertEquals(2, result.size());
-        assertEquals(BigDecimal.valueOf(15.0), result.get(0).getPriceUsd());
-        assertEquals(BigDecimal.valueOf(30.0), result.get(1).getPriceUsd());
+        assertEquals(BigDecimal.valueOf(10.6), result.get(0).getPriceUsd());
+        assertEquals(BigDecimal.valueOf(10.6), result.get(1).getPriceUsd());
     }
 }

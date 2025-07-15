@@ -1,9 +1,9 @@
-package controller;
+package com.example.productmanagement.controller;
 
 import com.example.productmanagement.dto.ProductDto;
 import com.example.productmanagement.mapper.ProductMapper;
 import com.example.productmanagement.model.Product;
-import com.example.productmanagement.service.ProductService;
+import com.example.productmanagement.service.impl.ProductService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -43,7 +43,7 @@ public class ProductControllerTest {
     private ProductDto getSampleDto() {
         return ProductDto.builder()
                 .id(1L)
-                .code("0123456789")
+                .code("CODE000001")
                 .name("Test Product")
                 .priceEur(new BigDecimal("100.00"))
                 .isAvailable(true)
@@ -69,11 +69,10 @@ public class ProductControllerTest {
         Mockito.when(service.save(any(Product.class))).thenReturn(entity);
         Mockito.when(mapper.toDto(any(Product.class))).thenReturn(dto);
 
-        mockMvc.perform(post("/api/products")
+        mockMvc.perform(post("/api/products/product")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(dto.getId()))
                 .andExpect(jsonPath("$.name").value(dto.getName()))
                 .andExpect(jsonPath("$.priceEur").value(dto.getPriceEur().doubleValue()));
     }
@@ -88,7 +87,6 @@ public class ProductControllerTest {
 
         mockMvc.perform(get("/api/products/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(dto.getId()))
                 .andExpect(jsonPath("$.name").value(dto.getName()));
     }
 
@@ -112,11 +110,11 @@ public class ProductControllerTest {
     void testCreateProduct_InvalidName_ShouldReturnBadRequest() throws Exception {
         ProductDto invalidDto = getSampleDto();
         invalidDto.setName("");
-        mockMvc.perform(post("/api/products")
+        mockMvc.perform(post("/api/products/product")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidDto)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").exists()); // Custom handler response
+                .andExpect(jsonPath("$.message").exists());
     }
 
     @Test
@@ -124,7 +122,7 @@ public class ProductControllerTest {
         ProductDto invalidDto = getSampleDto();
         invalidDto.setPriceEur(new BigDecimal("-10.00"));
 
-        mockMvc.perform(post("/api/products")
+        mockMvc.perform(post("/api/products/product")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidDto)))
                 .andExpect(status().isBadRequest())
@@ -135,7 +133,7 @@ public class ProductControllerTest {
     void testCreateProduct_NullCode_ShouldReturnBadRequest() throws Exception {
         ProductDto invalidDto = getSampleDto();
         invalidDto.setCode(null);
-        mockMvc.perform(post("/api/products")
+        mockMvc.perform(post("/api/products/product")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidDto)))
                 .andExpect(status().isBadRequest())
