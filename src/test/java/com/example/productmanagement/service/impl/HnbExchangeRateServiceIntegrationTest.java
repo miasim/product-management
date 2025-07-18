@@ -6,7 +6,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestTemplate;
 
@@ -20,6 +22,7 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 @SpringBootTest
+//@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class HnbExchangeRateServiceIntegrationTest {
 
     // URL Constants
@@ -39,7 +42,7 @@ class HnbExchangeRateServiceIntegrationTest {
 
     // Error Message Constants
     private static final String EXCHANGE_RATE_NOT_FOUND_MESSAGE = "Exchange rate not found";
-    private static final String INVALID_EXCHANGE_RATE_FORMAT_MESSAGE = "Invalid exchange rate format";
+    private static final String INVALID_EXCHANGE_RATE_FORMAT_MESSAGE = "Invalid exchange rate format.";
 
     @Autowired
     private ExchangeRateService exchangeRateService;
@@ -47,12 +50,21 @@ class HnbExchangeRateServiceIntegrationTest {
     @Autowired
     private RestTemplate restTemplate;
 
+    @Autowired
+    private CaffeineCacheManager cacheManager;
+
+
     private MockRestServiceServer mockServer;
 
     @BeforeEach
     void setUp() {
         mockServer = MockRestServiceServer.createServer(restTemplate);
+
+        cacheManager.getCache("exchangeRates").clear();
+        cacheManager.getCache( "eurToUsd").clear();
+
     }
+
 
     @Test
     void testGetEurRate_Success() {
@@ -127,6 +139,7 @@ class HnbExchangeRateServiceIntegrationTest {
                 () -> exchangeRateService.getExchangeRate(USD.name()));
 
         assertTrue(ex.getMessage().contains(INVALID_EXCHANGE_RATE_FORMAT_MESSAGE));
+        System.out.println(ex.getMessage());
         mockServer.verify();
     }
 

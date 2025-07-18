@@ -2,6 +2,7 @@ package com.example.productmanagement.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,11 +21,14 @@ public class Product {
 
     @Column(unique = true, length = 10, nullable = false)
     @Size(min = 10, max = 10, message = "Incorrect code length, code must contain exactly 10 characters")
+    @NotNull
     private String code;
 
+    @NotNull
     @Column(nullable = false)
     private String name;
 
+    @NotNull
     @DecimalMin(value = "0.0")
     @Column(name = "price_eur", nullable = false)
     private BigDecimal priceEur;
